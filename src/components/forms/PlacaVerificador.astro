@@ -1,0 +1,480 @@
+---
+// PlacaVerificador.astro
+interface VehicleData {
+  placa: string;
+  precio: number;
+  estado: string;
+ 
+  codigoBarras?: string; // Añadido campo para el código de barras
+}
+
+// Datos de ejemplo - en una aplicación real vendrían de una API o base de datos
+const vehiculosDB: VehicleData[] = [
+  {
+    placa: "ABC123",
+    precio: 15000,
+    estado: "No abonado",
+    codigoBarras: "1234567890123"
+  },
+  
+];
+
+// Props del componente
+export interface Props {
+  title?: string;
+  placeholder?: string;
+}
+
+const { 
+  title = "Verificador de Vehículos por Placa",
+  placeholder = "Ingrese número de placa (ej: ABC123)"
+} = Astro.props;
+---
+
+<div class="px- py- border-b border-gray-200">
+  <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+    <h2 class="text-2xl font-semibold text-gray-900 text-center mb-8">{title}</h2>
+    
+    <form class="mb-8" id="placaForm">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <input 
+          type="text" 
+          id="placaInput"
+          name="placa"
+          placeholder={placeholder}
+          maxlength="10"
+          pattern="[A-Za-z0-9]+"
+          required
+          class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-base uppercase focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+        />
+        <div class="flex gap-2">
+          <button 
+            type="submit" 
+            class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            Verificar
+          </button>
+          <button 
+            type="button" 
+            id="btnEscanear"
+            class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Escanear
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Scanner Modal -->
+    <div id="scannerModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 m-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900">Escanear Código de Barras</h3>
+          <button id="closeScanner" class="text-gray-500 hover:text-gray-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="mb-4">
+          <div id="scanner-container" class="relative bg-gray-100 rounded-lg overflow-hidden" style="height: 300px;">
+            <video id="scanner-video" class="absolute inset-0 w-full h-full object-cover"></video>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="w-64 h-64 border-2 border-red-500 rounded-lg"></div>
+            </div>
+            <div id="scanner-loading" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div class="animate-spin w-10 h-10 border-4 border-gray-200 border-t-green-600 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-center">
+          <p class="text-sm text-gray-600 mb-4">Coloque el código de barras dentro del recuadro para escanear</p>
+          
+          <!-- Para demostración, también añadimos entrada manual -->
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="manualBarcodeInput"
+              placeholder="O ingrese código manualmente"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+            <button 
+              id="btnManualBarcode"
+              class="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg"
+            >
+              Usar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="hidden text-center py-8">
+      <div class="animate-spin w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+      <p class="text-gray-600">Verificando información...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center"></div>
+
+    <!-- Vehicle Result -->
+    <div id="vehicleResult" class="hidden">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-100">
+        <h3 class="text-xl font-semibold text-gray-900">Información del Vehículo</h3>
+        <span id="statusBadge" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600 font-medium">Placa:</span>
+            <span id="resultPlaca" class="text-gray-900 font-semibold"></span>
+          </div> 
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600 font-medium">Estado:</span>
+            <span id="resultEstado" class="text-gray-900 font-semibold"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-6 text-center">
+        <div class="mb-6">
+          <span class="block text-lg text-gray-600 mb-2">Precio:</span>
+          <span id="resultPrecio" class="text-3xl font-bold text-green-600"></span>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ vehiculosDB }}>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('placaForm');
+    const placaInput = document.getElementById('placaInput');
+    const loading = document.getElementById('loading');
+    const errorMessage = document.getElementById('errorMessage');
+    const vehicleResult = document.getElementById('vehicleResult');
+    
+    // Elementos del escáner
+    const btnEscanear = document.getElementById('btnEscanear');
+    const scannerModal = document.getElementById('scannerModal');
+    const closeScanner = document.getElementById('closeScanner');
+    const scannerVideo = document.getElementById('scanner-video');
+    const scannerLoading = document.getElementById('scanner-loading');
+    const btnManualBarcode = document.getElementById('btnManualBarcode');
+    const manualBarcodeInput = document.getElementById('manualBarcodeInput');
+
+    // Elementos del resultado
+    const resultPlaca = document.getElementById('resultPlaca');
+    const resultEstado = document.getElementById('resultEstado');
+    const resultPrecio = document.getElementById('resultPrecio');
+    const statusBadge = document.getElementById('statusBadge');
+
+    // Variables del escáner
+    let scanner = null;
+    let activeStream = null;
+
+    // Formatear precio
+    function formatPrice(price) {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP'
+      }).format(price);
+    }
+
+    // Formatear kilometraje
+    function formatKilometraje(km) {
+      return new Intl.NumberFormat('es-ES').format(km) + ' km';
+    }
+
+    // Mostrar error
+    function showError(message) {
+      hideAll();
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
+    }
+
+    // Ocultar todos los elementos
+    function hideAll() {
+      loading.classList.add('hidden');
+      errorMessage.classList.add('hidden');
+      vehicleResult.classList.add('hidden');
+    }
+
+    // Buscar vehículo por placa
+    function buscarVehiculoPorPlaca(placa) {
+      const placaNormalizada = placa.toUpperCase().trim();
+      return vehiculosDB.find(vehicle => 
+        vehicle.placa.toUpperCase() === placaNormalizada
+      );
+    }
+
+    // Buscar vehículo por código de barras
+    function buscarVehiculoPorCodigo(codigo) {
+      const codigoNormalizado = codigo.trim();
+      return vehiculosDB.find(vehicle => 
+        vehicle.codigoBarras === codigoNormalizado
+      );
+    }
+
+    // Mostrar resultado del vehículo
+    function mostrarVehiculo(vehiculo) {
+      resultPlaca.textContent = vehiculo.placa;
+     
+     
+      resultEstado.textContent = vehiculo.estado;
+     
+      resultPrecio.textContent = formatPrice(vehiculo.precio);
+
+      // Configurar badge de estado con clases de Tailwind
+      statusBadge.textContent = vehiculo.estado;
+      
+      // Resetear clases
+      statusBadge.className = 'px-3 py-1 rounded-full text-sm font-medium';
+      
+      // Añadir clases específicas según el estado
+      switch(vehiculo.estado.toLowerCase()) {
+        case 'nuevo':
+          statusBadge.classList.add('bg-green-100', 'text-green-800');
+          break;
+        case 'seminuevo':
+          statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
+          break;
+        case 'usado':
+          statusBadge.classList.add('bg-blue-100', 'text-blue-800');
+          break;
+        default:
+          statusBadge.classList.add('bg-gray-100', 'text-gray-800');
+      }
+
+      hideAll();
+      vehicleResult.classList.remove('hidden');
+      
+      // Animación de aparición
+      vehicleResult.style.opacity = '0';
+      vehicleResult.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        vehicleResult.style.transition = 'all 0.5s ease-in-out';
+        vehicleResult.style.opacity = '1';
+        vehicleResult.style.transform = 'translateY(0)';
+      }, 10);
+    }
+
+    // Validar formato de placa
+    function validarPlaca(placa) {
+      const regex = /^[A-Za-z0-9]{3,8}$/;
+      return regex.test(placa);
+    }
+
+    // Cerrar escáner y liberar recursos
+    function cerrarScanner() {
+      scannerModal.classList.add('hidden');
+      document.body.style.overflow = '';
+      
+      // Detener el escáner si está activo
+      if (scanner) {
+        scanner.stop();
+      }
+      
+      // Detener la transmisión de video
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => {
+          track.stop();
+        });
+        activeStream = null;
+      }
+    }
+
+    // Inicializar el escáner
+    async function iniciarEscaner() {
+      try {
+        scannerLoading.classList.remove('hidden');
+        
+        // Verificar si la librería está cargada
+        if (typeof Html5Qrcode === 'undefined') {
+          throw new Error('La librería de escaneo no está disponible');
+        }
+        
+        // Inicializar escáner
+        scanner = new Html5Qrcode("scanner-container");
+        
+        // Configuración de cámara
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        };
+        
+        // Solicitar permisos y comenzar escáner
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length) {
+          const cameraId = devices[0].id;
+          
+          activeStream = await scanner.start(
+            cameraId, 
+            config,
+            onScanSuccess,
+            onScanFailure
+          );
+          
+          scannerLoading.classList.add('hidden');
+        } else {
+          throw new Error('No se detectaron cámaras');
+        }
+      } catch (error) {
+        console.error('Error al iniciar el escáner:', error);
+        scannerLoading.classList.add('hidden');
+        
+        // Mostrar mensaje dentro del modal
+        const scannerContainer = document.getElementById('scanner-container');
+        scannerContainer.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full p-4">
+            <svg class="w-12 h-12 text-red-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <p class="text-center text-red-600">${error.message || 'Error al acceder a la cámara'}</p>
+            <p class="text-sm text-gray-600 mt-2">Puedes usar la entrada manual debajo</p>
+          </div>
+        `;
+      }
+    }
+
+    // Función llamada cuando se detecta un código
+    function onScanSuccess(decodedText) {
+      // Detener el escáner después de detectar un código
+      cerrarScanner();
+      
+      // Procesar el código escaneado
+      procesarCodigoEscaneado(decodedText);
+    }
+
+    function onScanFailure(error) {
+      // No hacemos nada en caso de error, el escáner seguirá intentando
+      console.debug('Error de escaneo:', error);
+    }
+
+    // Procesar el código después de escanearlo
+    function procesarCodigoEscaneado(codigo) {
+      hideAll();
+      loading.classList.remove('hidden');
+      
+      // Simular búsqueda con delay
+      setTimeout(() => {
+        const vehiculo = buscarVehiculoPorCodigo(codigo);
+        
+        if (vehiculo) {
+          mostrarVehiculo(vehiculo);
+        } else {
+          showError(`No se encontró información para el código: ${codigo}`);
+        }
+      }, 1500);
+    }
+
+    // Manejar envío del formulario (búsqueda por placa)
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const placa = placaInput.value.trim();
+
+      if (!placa) {
+        showError('Por favor ingrese un número de placa');
+        return;
+      }
+
+      if (!validarPlaca(placa)) {
+        showError('Formato de placa inválido. Use solo letras y números (3-8 caracteres)');
+        return;
+      }
+
+      // Mostrar loading
+      hideAll();
+      loading.classList.remove('hidden');
+
+      // Simular búsqueda con delay
+      setTimeout(() => {
+        const vehiculo = buscarVehiculoPorPlaca(placa);
+
+        if (vehiculo) {
+          mostrarVehiculo(vehiculo);
+        } else {
+          showError(`No se encontró información para la placa: ${placa.toUpperCase()}`);
+        }
+      }, 1500);
+    });
+
+    // Formatear entrada en tiempo real
+    placaInput.addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    // Abrir el modal de escaneo
+    btnEscanear.addEventListener('click', function() {
+      scannerModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevenir scroll
+      
+      // Cargar la librería dinámicamente si no está cargada
+      if (typeof Html5Qrcode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js';
+        script.onload = iniciarEscaner;
+        document.head.appendChild(script);
+      } else {
+        iniciarEscaner();
+      }
+    });
+
+    // Cerrar el modal de escaneo
+    closeScanner.addEventListener('click', cerrarScanner);
+
+    // Procesar código de barras manual
+    btnManualBarcode.addEventListener('click', function() {
+      const codigo = manualBarcodeInput.value.trim();
+      if (codigo) {
+        cerrarScanner();
+        procesarCodigoEscaneado(codigo);
+      }
+    });
+
+    // También permitir enviar con Enter
+    manualBarcodeInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const codigo = manualBarcodeInput.value.trim();
+        if (codigo) {
+          cerrarScanner();
+          procesarCodigoEscaneado(codigo);
+        }
+      }
+    });
+
+    // Manejar botones de acción
+    document.addEventListener('click', function(e) {
+      if (e.target.textContent === 'Contactar Vendedor') {
+        alert('Función de contacto - aquí se integraría con un sistema de contacto');
+      } else if (e.target.textContent === 'Agendar Cita') {
+        alert('Función de agenda - aquí se integraría con un sistema de citas');
+      }
+    });
+
+    // Detectar clicks fuera del modal para cerrarlo
+    scannerModal.addEventListener('click', function(e) {
+      if (e.target === scannerModal) {
+        cerrarScanner();
+      }
+    });
+  });
+</script>

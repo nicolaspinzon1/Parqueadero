@@ -1,0 +1,507 @@
+---
+import "../styles/global.css";
+import Header from '../components/navigation/Header.astro';
+
+// Datos de ejemplo - en una app real vendrían de tu API/base de datos
+const vehicleData = [
+  {
+    placa: "ABC123",
+    tipo: "Carro",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "08:30",
+    fechaSalida: "2024-01-15",
+    horaSalida: "18:30",
+    pago: 5000
+  },
+  {
+    placa: "XYZ789",
+    tipo: "Moto",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "09:15",
+    fechaSalida: "2024-01-15",
+    horaSalida: "17:45",
+    pago: 2000
+  },
+  {
+    placa: "DEF456",
+    tipo: "Carro",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "10:00",
+    fechaSalida: "2024-01-15",
+    horaSalida: "19:15",
+    pago: 8000
+  },
+  {
+    placa: "GHI321",
+    tipo: "Moto",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "11:30",
+    fechaSalida: null, // Vehículo aún dentro
+    horaSalida: null,
+    pago: 3000
+  },
+  {
+    placa: "JKL654",
+    tipo: "Carro",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "12:45",
+    fechaSalida: "2024-01-15",
+    horaSalida: "20:30",
+    pago: 4500
+  },
+  {
+    placa: "MNO987",
+    tipo: "Moto",
+    fechaEntrada: "2024-01-15",
+    horaEntrada: "14:20",
+    fechaSalida: null, // Vehículo aún dentro
+    horaSalida: null,
+    pago: 2500
+  }
+];
+
+// Calcular estadísticas
+const totalVehiculos = vehicleData.length;
+const totalCarros = vehicleData.filter(v => v.tipo === "Carro").length;
+const totalMotos = vehicleData.filter(v => v.tipo === "Moto").length;
+const vehiculosActivos = vehicleData.filter(v => !v.fechaSalida).length;
+const totalRecaudado = vehicleData.reduce((sum, v) => sum + v.pago, 0);
+
+// Formatear números
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+
+// Función para calcular tiempo de estadía
+const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalida) => {
+  if (!fechaSalida || !horaSalida) return "En curso";
+  
+  const entrada = new Date(`${fechaEntrada}T${horaEntrada}`);
+  const salida = new Date(`${fechaSalida}T${horaSalida}`);
+  const diferencia = salida - entrada;
+  
+  const horas = Math.floor(diferencia / (1000 * 60 * 60));
+  const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return `${horas}h ${minutos}m`;
+};
+---
+<meta charset="UTF-8">
+ <Header/>
+<div class="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        Registro de Vehículos
+      </h1>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+      <!-- Total Vehículos -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-1">Total Vehículos</p>
+            <p class="text-2xl md:text-3xl font-bold text-gray-900">{totalVehiculos}</p>
+          </div>
+          <div class="bg-blue-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carros -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-1">Carros</p>
+            <p class="text-2xl md:text-3xl font-bold text-gray-900">{totalCarros}</p>
+          </div>
+          <div class="bg-green-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motos -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-1">Motos</p>
+            <p class="text-2xl md:text-3xl font-bold text-gray-900">{totalMotos}</p>
+          </div>
+          <div class="bg-orange-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehículos Activos -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-1">Vehículos Activos</p>
+            <p class="text-2xl md:text-3xl font-bold text-red-600">{vehiculosActivos}</p>
+          </div>
+          <div class="bg-red-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Recaudado -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 mb-1">Total Recaudado</p>
+            <p class="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(totalRecaudado)}</p>
+          </div>
+          <div class="bg-yellow-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+        </svg>
+        <h2 class="text-lg font-semibold text-gray-900">Buscar y Filtrar</h2>
+      </div>
+      
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Search Input -->
+        <div class="flex-1">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="searchInput"
+              placeholder="Buscar por placa..." 
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        
+        <!-- Filter Dropdown -->
+        <div class="relative">
+          <select 
+            id="typeFilter"
+            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Todos los tipos</option>
+            <option value="Carro">Carros</option>
+            <option value="Moto">Motos</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="relative">
+          <select 
+            id="statusFilter"
+            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Todos los estados</option>
+            <option value="activo">Vehículos Activos</option>
+            <option value="salido">Vehículos que Salieron</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle List -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="px-4 md:px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Lista de Vehículos</h2>
+        <p class="text-sm text-gray-600 mt-1">
+          <span id="vehicleCount">{totalVehiculos}</span> vehículos encontrados
+        </p>
+      </div>
+
+      <!-- Desktop Table -->
+      <div class="hidden lg:block overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placa</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Entrada</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Entrada</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Salida</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Salida</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiempo Estadía</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
+            </tr>
+          </thead>
+          <tbody id="vehicleTableBody" class="bg-white divide-y divide-gray-200">
+            {vehicleData.map((vehicle) => (
+              <tr class="vehicle-row hover:bg-gray-50 transition-colors" 
+                  data-placa={vehicle.placa.toLowerCase()} 
+                  data-tipo={vehicle.tipo}
+                  data-status={vehicle.fechaSalida ? 'salido' : 'activo'}>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{vehicle.placa}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    vehicle.tipo === 'Carro' 
+                      ? 'bg-black text-white' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {vehicle.tipo === 'Carro' ? (
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 3a2 2 0 00-2 2v1.5h16V5a2 2 0 00-2-2H4z"/>
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 12a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm6 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                    ) : (
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm10-1a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                      </svg>
+                    )}
+                    {vehicle.tipo}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {vehicle.fechaEntrada}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {vehicle.horaEntrada}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {vehicle.fechaSalida || '-'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {vehicle.horaSalida || '-'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {calcularTiempoEstadia(vehicle.fechaEntrada, vehicle.horaEntrada, vehicle.fechaSalida, vehicle.horaSalida)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {vehicle.fechaSalida ? (
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                      Salió
+                    </span>
+                  ) : (
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                      </svg>
+                      Activo
+                    </span>
+                  )}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                  {formatCurrency(vehicle.pago)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="mobileVehicleList" class="lg:hidden divide-y divide-gray-200">
+        {vehicleData.map((vehicle) => (
+          <div class="vehicle-card p-4" 
+               data-placa={vehicle.placa.toLowerCase()} 
+               data-tipo={vehicle.tipo}
+               data-status={vehicle.fechaSalida ? 'salido' : 'activo'}>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <div class="text-lg font-bold text-gray-900">{vehicle.placa}</div>
+                <span class={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  vehicle.tipo === 'Carro' 
+                    ? 'bg-black text-white' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {vehicle.tipo === 'Carro' ? (
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 3a2 2 0 00-2 2v1.5h16V5a2 2 0 00-2-2H4z"/>
+                      <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 12a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm6 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                  ) : (
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm10-1a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                    </svg>
+                  )}
+                  {vehicle.tipo}
+                </span>
+              </div>
+              <div class="text-lg font-bold text-green-600">
+                {formatCurrency(vehicle.pago)}
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <p class="text-xs text-gray-500 mb-1">Entrada</p>
+                <p class="text-sm font-medium text-gray-900">{vehicle.fechaEntrada}</p>
+                <p class="text-sm text-gray-600">{vehicle.horaEntrada}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 mb-1">Salida</p>
+                <p class="text-sm font-medium text-gray-900">{vehicle.fechaSalida || '-'}</p>
+                <p class="text-sm text-gray-600">{vehicle.horaSalida || '-'}</p>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-xs text-gray-500">Tiempo estadía</p>
+                <p class="text-sm font-medium text-gray-900">
+                  {calcularTiempoEstadia(vehicle.fechaEntrada, vehicle.horaEntrada, vehicle.fechaSalida, vehicle.horaSalida)}
+                </p>
+              </div>
+              <div>
+                {vehicle.fechaSalida ? (
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Salió
+                  </span>
+                ) : (
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                    Activo
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-12 px-4">
+        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.463-.64-6.314-1.76M6 15.171A7.962 7.962 0 005 12c0-4.418 3.582-8 8-8s8 3.582 8 8c0 1.19-.26 2.317-.729 3.332"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron vehículos</h3>
+        <p class="text-gray-500">Intenta cambiar los filtros de búsqueda</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Funcionalidad de filtros
+  const searchInput = document.getElementById('searchInput');
+  const typeFilter = document.getElementById('typeFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const vehicleRows = document.querySelectorAll('.vehicle-row');
+  const vehicleCards = document.querySelectorAll('.vehicle-card');
+  const vehicleCount = document.getElementById('vehicleCount');
+  const emptyState = document.getElementById('emptyState');
+  const tableBody = document.getElementById('vehicleTableBody');
+  const mobileList = document.getElementById('mobileVehicleList');
+
+  function filterVehicles() {
+    const searchTerm = searchInput?.value.toLowerCase() || '';
+    const selectedType = typeFilter?.value || '';
+    const selectedStatus = statusFilter?.value || '';
+    let visibleCount = 0;
+
+    // Filtrar filas de tabla (desktop)
+    vehicleRows.forEach(row => {
+      const placa = row.dataset.placa || '';
+      const tipo = row.dataset.tipo || '';
+      const status = row.dataset.status || '';
+      
+      const matchesSearch = placa.includes(searchTerm);
+      const matchesType = !selectedType || tipo === selectedType;
+      const matchesStatus = !selectedStatus || status === selectedStatus;
+      
+      if (matchesSearch && matchesType && matchesStatus) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // Filtrar tarjetas móviles
+    vehicleCards.forEach(card => {
+      const placa = card.dataset.placa || '';
+      const tipo = card.dataset.tipo || '';
+      const status = card.dataset.status || '';
+      
+      const matchesSearch = placa.includes(searchTerm);
+      const matchesType = !selectedType || tipo === selectedType;
+      const matchesStatus = !selectedStatus || status === selectedStatus;
+      
+      if (matchesSearch && matchesType && matchesStatus) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Actualizar contador
+    if (vehicleCount) {
+      vehicleCount.textContent = visibleCount;
+    }
+
+    // Mostrar/ocultar estado vacío
+    if (visibleCount === 0) {
+      emptyState?.classList.remove('hidden');
+      tableBody?.classList.add('hidden');
+      mobileList?.classList.add('hidden');
+    } else {
+      emptyState?.classList.add('hidden');
+      tableBody?.classList.remove('hidden');
+      mobileList?.classList.remove('hidden');
+    }
+  }
+
+  // Event listeners
+  searchInput?.addEventListener('input', filterVehicles);
+  typeFilter?.addEventListener('change', filterVehicles);
+  statusFilter?.addEventListener('change', filterVehicles);
+
+  // Limpiar filtros al cargar la página
+  document.addEventListener('DOMContentLoaded', () => {
+    if (searchInput) searchInput.value = '';
+    if (typeFilter) typeFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+  });
+</script>
