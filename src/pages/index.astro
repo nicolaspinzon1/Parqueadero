@@ -1,113 +1,467 @@
 ---
-import PlacaVerificador from '../components/forms/PlacaVerificador.astro'
+
 import Layout from '../layouts/Layout.astro';
-import Sidebar from '../components/navigation/Sidebar.astro';
+
 import Header from '../components/navigation/Header.astro';
-import StatsCard from '../components/dashboard/StatsCard.astro';
-import RecentActivity from '../components/dashboard/RecentActivity.astro';
-import VehicleRegistrationForm from '../components/forms/VehicleRegistrationForm.astro';
 import "../styles/global.css";
-
-// Datos para las estadísticas (podrían venir de una API)
-const statsData = [
-  {
-    title: "Vehículos Actuales",
-    value: 42,
-    icon: "M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v8a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z",
-    iconColor: "blue" as const
-  },
-  {
-    title: "Ingresos Hoy",
-    value: "$580.000",
-    icon: "M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z",
-    iconColor: "green" as const
-  },
-  {
-    title: "Plan mensual",
-    value: 28,
-    icon: "M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z",
-    iconColor: "yellow" as const
-  },
-  {
-    title: "Ocupación",
-    value: "60%",
-    icon: "M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z",
-    iconColor: "red" as const
-  }
-];
-
-const staData = [
-  {
-    title: "Vehículos Total",
-    value: 401,
-    icon: "M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v8a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z",
-    iconColor: "blue" as const
-  },
-  {
-    title: "Ingresos Semana",
-    value: "$580.0000",
-    icon: "M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z",
-    iconColor: "green" as const
-  },
-  {
-    title: "Total de motos",
-    value: 28,
-    icon: "M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z",
-    iconColor: "yellow" as const
-  },
-  {
-    title: "Total de carros",
-    value: "501",
-    icon: "M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z",
-    iconColor: "red" as const
-  }
-];
-
+import StatsCard from '../components/dashboard/StatsCard.astro';
+import VehicleVerification from '../components/forms/VehicleVerification.astro';
+import VehicleRegistration from '../components/forms/VehicleRegistration.astro';
+import "../styles/global.css";
 
 ---
 
 <Layout title="Parqueadero El PIJAO">
-    <div class="flex h-screen">
-        <!-- <Sidebar currentPage="dashboard" /> -->
-        
-        <main class="flex-1 overflow-y-auto">
-        
-            <Header/>
-            
-            <div class="p-6">
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {statsData.map(stat => (
-                        <StatsCard 
-                            title={stat.title}
-                            value={stat.value}
-                            icon={stat.icon}
-                            iconColor={stat.iconColor}
-                        />
-                    ))}
-                </div>
-               
-                <!-- Bottom Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <PlacaVerificador 
-                  title="Verificación de Vehículos"
-                  placeholder="Ej: ABC123"
-                />
-                    
-                    <VehicleRegistrationForm />
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  {staData.map(sta => (
-                      <StatsCard 
-                          title={sta.title}
-                          value={sta.value}
-                          icon={sta.icon}
-                          iconColor={sta.iconColor}
-                      />
-                  ))}
-              </div>
+  <Header/>
+  <div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+  
+     
+
+      <!-- Stats Cards -->
+      <div id="statsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard 
+          title="Vehículos Actuales"
+          value="0"
+          icon="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v8a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"
+          iconColor="blue"
+        />
+        <StatsCard 
+          title="Ingresos Hoy"
+          value="$0"
+          icon="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+          iconColor="green"
+          
+        />
+        <StatsCard 
+          title="Ingresos Semana"
+          value="$0"
+           icon="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+          iconColor="green"
+          
+        />
+        <StatsCard 
+          title="Ingresos Mensual"
+          value="$0"
+          icon="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+          iconColor="green"
+          
+        />
+      </div>
+
+      <!-- Main Actions -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <VehicleVerification />
+        <VehicleRegistration />
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="hidden text-center py-4">
+        <div class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Actualizando datos...
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error al cargar datos</h3>
+            <div class="mt-2 text-sm text-red-700">
+              <p id="errorText">No se pudo conectar con el servidor. Verificando conexión...</p>
             </div>
-        </main>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats adicionales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+           <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 11h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1h-1.5M17 11h-6.5m6.5 0l-2.417-4.029A2 2 0 0 0 12.868 6H10.5m0 0v5m0-5H7.64a2 2 0 0 0-1.962 1.608L5 11m5.5 0H5m.5 5H4a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2v0m.5 5a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h5m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0"/>
+            </svg>
+            <h3 class="text-lg font-semibold">Total Carros</h3>
+          </div>
+          <div id="totalCarros" class="text-3xl font-bold text-blue-600">0</div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/> -->
+                 <svg class= xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 640 512"><path fill="currentColor" d="M280 32c-13.3 0-24 10.7-24 24s10.7 24 24 24h57.7l16.4 30.3L256 192l-45.3-45.3c-12-12-28.3-18.7-45.3-18.7H64c-17.7 0-32 14.3-32 32v32h96c88.4 0 160 71.6 160 160c0 11-1.1 21.7-3.2 32h70.4c-2.1-10.3-3.2-21-3.2-32c0-52.2 25-98.6 63.7-127.8l15.4 28.6C402.4 276.3 384 312 384 352c0 70.7 57.3 128 128 128s128-57.3 128-128s-57.3-128-128-128c-13.5 0-26.5 2.1-38.7 6l-55.1-102H480c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32h-20.4c-7.5 0-14.7 2.6-20.5 7.4l-47.4 39.5l-14-26c-7-12.9-20.5-21-35.2-21zm182.7 279.2l28.2 52.2c6.3 11.7 20.9 16 32.5 9.7s16-20.9 9.7-32.5l-28.2-52.2c2.3-.3 4.7-.4 7.1-.4c35.3 0 64 28.7 64 64s-28.7 64-64 64s-64-28.7-64-64c0-15.5 5.5-29.7 14.7-40.8M187.3 376c-9.5 23.5-32.5 40-59.3 40c-35.3 0-64-28.7-64-64s28.7-64 64-64c26.9 0 49.9 16.5 59.3 40h66.4c-11.2-59.2-63.2-104-125.7-104C57.3 224 0 281.3 0 352s57.3 128 128 128c62.5 0 114.5-44.8 125.8-104h-66.4zm-59.3 8a32 32 0 1 0 0-64a32 32 0 1 0 0 64"/></svg>
+            <h3 class="text-lg font-semibold">Total Motos</h3>
+          </div>
+          <div id="totalMotos" class="text-3xl font-bold text-green-600">0</div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            
+            <svg class="h-5 w-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" text-purple-600 viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 20a2 2 0 1 0 4 0a2 2 0 0 0-4 0m10 0a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/><path d="M5 20H3v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0H9m-6-6h15m-6 0V9M3 6l9-4l9 4"/></g></svg>
+            <h3 class="text-lg font-semibold">Total Vehículos</h3>
+          </div>
+          <div id="totalVehiculos" class="text-3xl font-bold text-purple-600">0</div>
+        </div>
+      </div>
     </div>
+  </div>
 </Layout>
+
+<script>
+// Configuración de la API
+const API_BASE_URL = 'http://127.0.0.1:5000';
+const API_ENDPOINTS = {
+  currentStats: '/api/reports/stats/current',
+  weeklyStats: '/api/reports/stats/weekly',
+  monthlyStats: '/api/reports/stats/monthly'
+};
+
+// Variables para el manejo de actualizaciones
+let updateInterval;
+let isUpdating = false;
+
+// Función para mostrar/ocultar indicador de carga
+function toggleLoading(show = true) {
+  const loadingEl = document.getElementById('loadingIndicator');
+  if (loadingEl) {
+    loadingEl.classList.toggle('hidden', !show);
+  }
+}
+
+// Función para mostrar errores
+function showError(message) {
+  const errorEl = document.getElementById('errorMessage');
+  const errorTextEl = document.getElementById('errorText');
+  
+  if (errorEl && errorTextEl) {
+    errorTextEl.textContent = message;
+    errorEl.classList.remove('hidden');
+    
+    // Ocultar error después de 5 segundos
+    setTimeout(() => {
+      errorEl.classList.add('hidden');
+    }, 5000);
+  }
+}
+
+// Función para ocultar errores
+function hideError() {
+  const errorEl = document.getElementById('errorMessage');
+  if (errorEl) {
+    errorEl.classList.add('hidden');
+  }
+}
+
+// Función para formatear números como moneda
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(amount);
+}
+
+// Función para obtener datos de la API
+async function fetchApiData(endpoint) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      // Agregar timeout de 10 segundos
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error('La API devolvió un estado de error');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error(`Error al obtener datos de ${endpoint}:`, error);
+    
+    // Determinar el tipo de error y mostrar mensaje apropiado
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      throw new Error('Tiempo de espera agotado. El servidor no responde.');
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      throw new Error('Error de conexión. Verifique que el servidor esté ejecutándose en http://127.0.0.1:5000');
+    } else {
+      throw error;
+    }
+  }
+}
+
+// Función para calcular ingresos semanales desde los datos diarios
+function calculateWeeklyIncome(weeklyData) {
+  let totalIncome = 0;
+  
+  for (const date in weeklyData) {
+    if (weeklyData[date] && typeof weeklyData[date].ingresos === 'number') {
+      totalIncome += weeklyData[date].ingresos;
+    }
+  }
+  
+  return totalIncome;
+}
+
+// FUNCIÓN CORREGIDA: Función para calcular ingresos mensuales desde los datos por semana
+function calculateMonthlyIncome(monthlyData, weeklyIncome = 0) {
+  let totalIncome = 0;
+  
+  // Sumar ingresos de todas las semanas del mes (semanas anteriores)
+  for (const week in monthlyData) {
+    if (monthlyData[week] && typeof monthlyData[week].ingresos === 'number') {
+      totalIncome += monthlyData[week].ingresos;
+    }
+  }
+  
+  // IMPORTANTE: Agregar los ingresos de la semana actual al total mensual
+  // Esto asegura que la semana actual se refleje en el total del mes
+  totalIncome += weeklyIncome;
+  
+  return totalIncome;
+}
+
+// Función para obtener todos los datos necesarios
+async function fetchAllData() {
+  try {
+    const [currentData, weeklyData, monthlyData] = await Promise.all([
+      fetchApiData(API_ENDPOINTS.currentStats),
+      fetchApiData(API_ENDPOINTS.weeklyStats),
+      fetchApiData(API_ENDPOINTS.monthlyStats)
+    ]);
+
+    return {
+      current: currentData,
+      weekly: weeklyData,
+      monthly: monthlyData
+    };
+  } catch (error) {
+    console.error('Error al obtener datos combinados:', error);
+    throw error;
+  }
+}
+
+// FUNCIÓN CORREGIDA: Función para actualizar las estadísticas en el DOM
+function updateStatsDisplay(allData) {
+  try {
+    const { current: apiData, weekly: weeklyData, monthly: monthlyData } = allData;
+    
+    // Calcular ingresos
+    const weeklyIncome = calculateWeeklyIncome(weeklyData);
+    // CORRECCIÓN: Pasar weeklyIncome al cálculo mensual para incluir la semana actual
+    const monthlyIncome = calculateMonthlyIncome(monthlyData, weeklyIncome);
+
+    // StatsCards principales - actualizar dinámicamente los valores
+    const statsCards = document.querySelectorAll('#statsContainer .bg-white');
+    
+    // Actualizar "Vehículos Actuales" (primera card)
+    if (statsCards[0]) {
+      const valueEl = statsCards[0].querySelector('.text-2xl, .text-3xl');
+      if (valueEl) {
+        valueEl.textContent = apiData.active_vehicles.total.toString();
+      }
+    }
+
+    // Actualizar "Ingresos Hoy" (segunda card)
+    if (statsCards[1]) {
+      const valueEl = statsCards[1].querySelector('.text-2xl, .text-3xl');
+      if (valueEl) {
+        valueEl.textContent = formatCurrency(apiData.daily_income);
+      }
+    }
+
+    // Actualizar "Ingresos Semana" (tercera card)
+    if (statsCards[2]) {
+      const valueEl = statsCards[2].querySelector('.text-2xl, .text-3xl');
+      if (valueEl) {
+        valueEl.textContent = formatCurrency(weeklyIncome);
+      }
+    }
+
+    // Actualizar "Ingresos Mensual" (cuarta card)
+    if (statsCards[3]) {
+      const valueEl = statsCards[3].querySelector('.text-2xl, .text-3xl');
+      if (valueEl) {
+        valueEl.textContent = formatCurrency(monthlyIncome);
+      }
+    }
+
+    // Estadísticas adicionales
+    const totalCarrosEl = document.getElementById('totalCarros');
+    const totalMotosEl = document.getElementById('totalMotos');
+    const totalVehiculosEl = document.getElementById('totalVehiculos');
+
+    if (totalCarrosEl) {
+      totalCarrosEl.textContent = apiData.active_vehicles.carros.toString();
+    }
+    
+    if (totalMotosEl) {
+      totalMotosEl.textContent = apiData.active_vehicles.motos.toString();
+    }
+    
+    if (totalVehiculosEl) {
+      totalVehiculosEl.textContent = apiData.active_vehicles.total.toString();
+    }
+
+    // LOGS MEJORADOS para debug
+    console.log('Estadísticas actualizadas:', {
+      carros: apiData.active_vehicles.carros,
+      motos: apiData.active_vehicles.motos,
+      total: apiData.active_vehicles.total,
+      ingresosDiarios: apiData.daily_income,
+      ingresosSemanales: weeklyIncome,
+      ingresosMensuales: monthlyIncome, // Ahora incluye la semana actual
+      desglose: {
+        ingresosSemanaActual: weeklyIncome,
+        ingresosSemanasAnteriores: calculateMonthlyIncome(monthlyData, 0),
+        totalMensualFinal: monthlyIncome
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar el display:', error);
+    showError('Error al actualizar la interfaz');
+  }
+}
+
+// Función principal para actualizar estadísticas
+async function updateStats() {
+  if (isUpdating) return; // Evitar múltiples actualizaciones simultáneas
+  
+  isUpdating = true;
+  toggleLoading(true);
+  hideError();
+
+  try {
+    const allData = await fetchAllData();
+    updateStatsDisplay(allData);
+    hideError();
+  } catch (error) {
+    console.error('Error al actualizar estadísticas:', error);
+    showError(error.message);
+    
+    // Fallback a datos de ejemplo en caso de error
+    const fallbackData = {
+      current: {
+        active_vehicles: {
+          carros: 0,
+          motos: 0,
+          total: 0
+        },
+        daily_income: 0
+      },
+      weekly: {},
+      monthly: {}
+    };
+    updateStatsDisplay(fallbackData);
+  } finally {
+    toggleLoading(false);
+    isUpdating = false;
+  }
+}
+
+// Función para inicializar la aplicación
+function initialize() {
+  console.log('Inicializando dashboard del parqueadero...');
+  
+  // Actualizar inmediatamente
+  updateStats();
+  
+  // Configurar actualización automática cada 30 segundos
+  if (updateInterval) {
+    clearInterval(updateInterval);
+  }
+  
+  updateInterval = setInterval(updateStats, 30000);
+  
+  console.log('Dashboard inicializado. Actualizaciones automáticas cada 30 segundos.');
+}
+
+// Función de limpieza al salir de la página
+function cleanup() {
+  if (updateInterval) {
+    clearInterval(updateInterval);
+    updateInterval = null;
+  }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', initialize);
+window.addEventListener('beforeunload', cleanup);
+
+// Hacer disponible globalmente para otros componentes
+window.updateStats = updateStats;
+window.parkingDashboard = {
+  updateStats,
+  initialize,
+  cleanup
+};
+
+// Listener para actualizaciones manuales (opcional)
+document.addEventListener('keydown', function(e) {
+  // Ctrl/Cmd + R para actualizar manualmente
+  if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+    e.preventDefault();
+    updateStats();
+  }
+});
+</script>
+
+<style>
+  /* Estilos adicionales para mejorar la UX */
+  .bg-white {
+    transition: all 0.3s ease;
+  }
+  
+  .bg-white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Animación para los números */
+  .text-3xl, .text-2xl {
+    transition: all 0.5s ease;
+  }
+
+  /* Estilo para el indicador de carga */
+  #loadingIndicator {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Responsive improvements */
+  @media (max-width: 768px) {
+    .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4 {
+      gap: 1rem;
+    }
+    
+    .p-6 {
+      padding: 1rem;
+    }
+  }
+</style>

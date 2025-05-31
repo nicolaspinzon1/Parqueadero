@@ -1,0 +1,222 @@
+---
+---
+
+<div class="bg-white rounded-lg shadow">
+  <div class="p-6">
+    <div class="flex items-center gap-2 mb-2">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <h2 class="text-lg font-semibold">Verificación de Vehículos</h2>
+    </div>
+    <p class="text-gray-600 text-sm mb-4"></p>
+    
+    <div class="space-y-4">
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="searchPlaca"
+          placeholder=" ABC123" 
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button 
+          id="verifyBtn"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          Verificar
+        </button>
+        <button 
+          id="scanBtn"
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center gap-2"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+          </svg>
+          Escanear
+        </button>
+      </div>
+
+      <div id="searchResult" class="hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Funcionalidad de verificación de vehículos
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchPlaca');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const searchResult = document.getElementById('searchResult');
+
+    // Obtener vehículos del localStorage
+    function getVehicles() {
+      return JSON.parse(localStorage.getItem('parkingVehicles') || '[]');
+    }
+
+    // Obtener tarifas del localStorage
+    function getTarifas() {
+      return JSON.parse(localStorage.getItem('parkingTarifas') || JSON.stringify({
+        carro: { porHora: 5000, porDia: 25000, fraccionMinima: 30 },
+        moto: { porHora: 2000, porDia: 12000, fraccionMinima: 30 }
+      }));
+    }
+
+    // Formatear moneda
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+      }).format(amount);
+    }
+
+    // Calcular tiempo transcurrido
+    function calcularTiempoTranscurrido(vehicle) {
+      const now = new Date();
+      const ingreso = new Date(`${vehicle.fechaIngreso}T${vehicle.horaIngreso}`);
+      const tiempoEnMinutos = Math.floor((now.getTime() - ingreso.getTime()) / (1000 * 60));
+
+      const horas = Math.floor(tiempoEnMinutos / 60);
+      const minutos = tiempoEnMinutos % 60;
+
+      if (horas === 0) {
+        return `${minutos} minutos`;
+      } else if (minutos === 0) {
+        return `${horas} hora${horas > 1 ? 's' : ''}`;
+      } else {
+        return `${horas} hora${horas > 1 ? 's' : ''} y ${minutos} minutos`;
+      }
+    }
+
+    // Calcular pago
+    function calcularPago(vehicle) {
+      const now = new Date();
+      const ingreso = new Date(`${vehicle.fechaIngreso}T${vehicle.horaIngreso}`);
+      const tiempoEnMinutos = Math.floor((now.getTime() - ingreso.getTime()) / (1000 * 60));
+
+      const tarifas = getTarifas();
+      const tarifa = tarifas[vehicle.tipo];
+      const horasCompletas = Math.floor(tiempoEnMinutos / 60);
+      const minutosRestantes = tiempoEnMinutos % 60;
+
+      const horasACobrar = minutosRestantes >= tarifa.fraccionMinima ? horasCompletas + 1 : horasCompletas;
+      return Math.max(horasACobrar * tarifa.porHora, tarifa.porHora);
+    }
+
+    // Mostrar resultado de búsqueda
+    function showSearchResult(vehicle) {
+      if (vehicle) {
+        const tarifas = getTarifas();
+        const pago = calcularPago(vehicle);
+        const tiempo = calcularTiempoTranscurrido(vehicle);
+
+        searchResult.innerHTML = `
+          <div class="border border-green-200 bg-green-50 rounded-md p-4">
+            <div class="flex items-start gap-2">
+              <svg class="h-4 w-4 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <div class="flex-1">
+                <p class="font-medium text-green-800 mb-2">✅ Vehículo encontrado</p>
+                <div class="text-sm text-green-700 space-y-1 mb-3">
+                  <p><span class="font-medium">Placa:</span> ${vehicle.placa}</p>
+                  <p><span class="font-medium">Tipo:</span> ${vehicle.tipo}</p>
+                  <p><span class="font-medium">Ingreso:</span> ${vehicle.fechaIngreso} a las ${vehicle.horaIngreso}</p>
+                  <p><span class="font-medium">Tiempo transcurrido:</span> ${tiempo}</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded-md border border-green-200 mb-3">
+                  <p class="font-medium text-green-800 mb-1">💰 Información de Pago</p>
+                  <div class="text-sm space-y-1">
+                    <p><span class="font-medium">Tarifa por hora:</span> ${formatCurrency(tarifas[vehicle.tipo].porHora)}</p>
+                    <p><span class="font-medium">Total a pagar:</span> <span class="text-lg font-bold text-green-700">${formatCurrency(pago)}</span></p>
+                  </div>
+                </div>
+                
+                <button onclick="handleExit('${vehicle.id}')" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                  💳 Registrar Salida - ${formatCurrency(pago)}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        searchResult.innerHTML = `
+          <div class="border border-red-200 bg-red-50 rounded-md p-4">
+            <div class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <p class="text-red-800">❌ No se encontró el vehículo en el parqueadero</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      searchResult.classList.remove('hidden');
+      setTimeout(() => {
+        searchResult.classList.add('hidden');
+      }, 8000);
+    }
+
+    // Manejar búsqueda
+    function handleSearch() {
+      const placa = searchInput.value.trim().toUpperCase();
+      if (!placa) return;
+
+      const vehicles = getVehicles();
+      const found = vehicles.find(v => v.placa.toLowerCase() === placa.toLowerCase() && v.estado === 'activo');
+      showSearchResult(found);
+    }
+
+    // Manejar escaneo
+    function handleScan() {
+      const vehicles = getVehicles();
+      const activeVehicles = vehicles.filter(v => v.estado === 'activo');
+
+      if (activeVehicles.length === 0) {
+        alert('No hay vehículos activos para escanear');
+        return;
+      }
+
+      const randomVehicle = activeVehicles[Math.floor(Math.random() * activeVehicles.length)];
+      searchInput.value = randomVehicle.placa;
+      showSearchResult(randomVehicle);
+    }
+
+    // Event listeners
+    verifyBtn.addEventListener('click', handleSearch);
+    scanBtn.addEventListener('click', handleScan);
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handleSearch();
+    });
+    searchInput.addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    // Función global para manejar salida
+    window.handleExit = function(vehicleId) {
+      const vehicles = getVehicles();
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      if (!vehicle) return;
+
+      const pago = calcularPago(vehicle);
+      const updatedVehicles = vehicles.map(v => 
+        v.id === vehicleId ? { ...v, estado: 'salida', pago } : v
+      );
+
+      localStorage.setItem('parkingVehicles', JSON.stringify(updatedVehicles));
+      searchResult.classList.add('hidden');
+      searchInput.value = '';
+      
+      // Actualizar estadísticas
+      window.updateStats && window.updateStats();
+      
+      alert(`Salida registrada. Total pagado: ${formatCurrency(pago)}`);
+    };
+  });
+</script>

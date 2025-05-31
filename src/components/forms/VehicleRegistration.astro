@@ -1,0 +1,125 @@
+---
+---
+
+<div class="bg-white rounded-lg shadow">
+  <div class="p-6">
+    <div class="flex items-center gap-2 mb-2">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+      <h2 class="text-lg font-semibold">Registrar Vehículo</h2>
+    </div>
+ 
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Placa</label>
+        <input 
+          type="text" 
+          id="newPlaca"
+          placeholder="ABC-123" 
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Vehículo</label>
+        <select 
+          id="newTipo"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Selecciona el tipo</option>
+          <option value="carro">🚗 Automóvil</option>
+          <option value="moto">🏍️ Motocicleta</option>
+        </select>
+      </div>
+
+      <button 
+        id="registerBtn"
+        class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        disabled
+      >
+        Registrar Entrada
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const placaInput = document.getElementById('newPlaca');
+    const tipoSelect = document.getElementById('newTipo');
+    const registerBtn = document.getElementById('registerBtn');
+
+    function getVehicles() {
+      return JSON.parse(localStorage.getItem('parkingVehicles') || '[]');
+    }
+
+    function saveVehicles(vehicles) {
+      localStorage.setItem('parkingVehicles', JSON.stringify(vehicles));
+    }
+
+    function validateForm() {
+      const placa = placaInput.value.trim();
+      const tipo = tipoSelect.value;
+      registerBtn.disabled = !placa || !tipo;
+    }
+
+    function registerVehicle() {
+      const placa = placaInput.value.trim().toLowerCase();
+      const tipo = tipoSelect.value;
+
+      if (!placa || !tipo) return;
+
+      fetch('https://xpz21v8w-5000.use2.devtunnels.ms/api/vehicles/entry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          plate: placa,
+          vehicle_type: tipo
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al registrar el vehículo');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert(`Vehículo ${placa.toUpperCase()} registrado exitosamente `);
+
+        const vehicles = getVehicles();
+        const now = new Date();
+        vehicles.push({
+          id: Date.now().toString(),
+          placa: placa.toUpperCase(),
+          tipo: tipo,
+          fechaIngreso: now.toISOString().split('T')[0],
+          horaIngreso: now.toTimeString().slice(0, 5),
+          estado: 'activo'
+        });
+        saveVehicles(vehicles);
+
+        placaInput.value = '';
+        tipoSelect.value = '';
+        validateForm();
+
+        window.updateStats && window.updateStats();
+      })
+      .catch(error => {
+        console.error('Error al hacer POST:', error);
+        alert('No se pudo registrar el vehículo en la API');
+      });
+    }
+
+    placaInput.addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase();
+      validateForm();
+    });
+
+    tipoSelect.addEventListener('change', validateForm);
+    registerBtn.addEventListener('click', registerVehicle);
+
+    validateForm();
+  });
+</script>

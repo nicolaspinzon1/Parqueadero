@@ -1,6 +1,6 @@
 ---
-import "../styles/global.css";
 import Header from '../components/navigation/Header.astro';
+import Layout from '../layouts/Layout.astro';
 
 // Datos de ejemplo - en una app real vendrían de tu API/base de datos
 const vehicleData = [
@@ -89,8 +89,10 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
   
   return `${horas}h ${minutos}m`;
 };
+import "../styles/global.css";
 ---
-<meta charset="UTF-8">
+<Layout> 
+
  <Header/>
 <div class="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
@@ -111,8 +113,9 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
             <p class="text-2xl md:text-3xl font-bold text-gray-900">{totalVehiculos}</p>
           </div>
           <div class="bg-blue-50 p-2 md:p-3 rounded-lg">
-            <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+             <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v8a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" clip-rule="evenodd"></path>
+            </svg>
             </svg>
           </div>
         </div>
@@ -125,9 +128,9 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
             <p class="text-sm font-medium text-gray-600 mb-1">Carros</p>
             <p class="text-2xl md:text-3xl font-bold text-gray-900">{totalCarros}</p>
           </div>
-          <div class="bg-green-50 p-2 md:p-3 rounded-lg">
-            <svg class="w-5 h-5 md:w-6 md:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          <div class="bg-yellow-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 11h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1h-1.5M17 11h-6.5m6.5 0l-2.417-4.029A2 2 0 0 0 12.868 6H10.5m0 0v5m0-5H7.64a2 2 0 0 0-1.962 1.608L5 11m5.5 0H5m.5 5H4a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2v0m.5 5a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h5m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0"/>
             </svg>
           </div>
         </div>
@@ -142,7 +145,8 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
           </div>
           <div class="bg-orange-50 p-2 md:p-3 rounded-lg">
             <svg class="w-5 h-5 md:w-6 md:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/> -->
+                 <svg class= xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 640 512"><path fill="currentColor" d="M280 32c-13.3 0-24 10.7-24 24s10.7 24 24 24h57.7l16.4 30.3L256 192l-45.3-45.3c-12-12-28.3-18.7-45.3-18.7H64c-17.7 0-32 14.3-32 32v32h96c88.4 0 160 71.6 160 160c0 11-1.1 21.7-3.2 32h70.4c-2.1-10.3-3.2-21-3.2-32c0-52.2 25-98.6 63.7-127.8l15.4 28.6C402.4 276.3 384 312 384 352c0 70.7 57.3 128 128 128s128-57.3 128-128s-57.3-128-128-128c-13.5 0-26.5 2.1-38.7 6l-55.1-102H480c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32h-20.4c-7.5 0-14.7 2.6-20.5 7.4l-47.4 39.5l-14-26c-7-12.9-20.5-21-35.2-21zm182.7 279.2l28.2 52.2c6.3 11.7 20.9 16 32.5 9.7s16-20.9 9.7-32.5l-28.2-52.2c2.3-.3 4.7-.4 7.1-.4c35.3 0 64 28.7 64 64s-28.7 64-64 64s-64-28.7-64-64c0-15.5 5.5-29.7 14.7-40.8M187.3 376c-9.5 23.5-32.5 40-59.3 40c-35.3 0-64-28.7-64-64s28.7-64 64-64c26.9 0 49.9 16.5 59.3 40h66.4c-11.2-59.2-63.2-104-125.7-104C57.3 224 0 281.3 0 352s57.3 128 128 128c62.5 0 114.5-44.8 125.8-104h-66.4zm-59.3 8a32 32 0 1 0 0-64a32 32 0 1 0 0 64"/></svg>
             </svg>
           </div>
         </div>
@@ -170,8 +174,8 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
             <p class="text-sm font-medium text-gray-600 mb-1">Total Recaudado</p>
             <p class="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(totalRecaudado)}</p>
           </div>
-          <div class="bg-yellow-50 p-2 md:p-3 rounded-lg">
-            <svg class="w-5 h-5 md:w-6 md:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-green-50 p-2 md:p-3 rounded-lg">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-green-600"  fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
             </svg>
           </div>
@@ -422,6 +426,7 @@ const calcularTiempoEstadia = (fechaEntrada, horaEntrada, fechaSalida, horaSalid
     </div>
   </div>
 </div>
+<Layout/> 
 
 <script>
   // Funcionalidad de filtros
