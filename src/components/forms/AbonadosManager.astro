@@ -1,20 +1,20 @@
----
----
-
-<div class="bg-white ">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Abonados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="bg-white">
   <div class="p-6">
     <div class="flex items-center gap-2 mb-2">
-      <!-- <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-      </svg> -->
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Gestión de Abonados</h1>
     </div>
 
-    
-
-    <!-- border-t -->
     <!-- Estadísticas de abonados -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4  mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 mb-5">
       <div class="text-center">
         <div id="abonadosCarros" class="text-2xl font-bold text-blue-600">0</div>
         <div class="text-sm text-gray-600">Carros Abonados</div>
@@ -32,13 +32,24 @@
     <!-- Formulario para nuevo abonado -->
     <div class="bg-blue-50 p-4 rounded-lg mb-6">
       <h3 class="font-medium text-blue-800 mb-3">Registrar Nuevo Abonado</h3>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+          <input 
+            type="text" 
+            id="abonadoNombre"
+            placeholder="Nombre completo" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Placa</label>
           <input 
             type="text" 
             id="abonadoPlaca"
             placeholder="ABC-123" 
+            maxlength="6"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -54,71 +65,100 @@
             <option value="moto">🏍️ Moto</option>
           </select>
         </div>
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
           <input 
-            type="text" 
-            id="abonadoNombre"
-            placeholder="Nombre completo" 
+            type="number" 
+            id="abonadoMonto"
+            placeholder="Valor" 
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        
         <div class="flex items-end">
           <button 
             id="addAbonadoBtn"
             class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
             disabled
           >
-            Agregar Abonado
+            <span id="btnText">Agregar Abonado</span>
+            <span id="btnSpinner" class="hidden">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Guardando...
+            </span>
           </button>
         </div>
       </div>
     </div>
-    
+
+    <!-- Mensajes de estado -->
+    <div id="messageContainer" class="mb-4"></div>
 
     <!-- Lista de abonados activos -->
     <div class="mb-6">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-medium text-gray-800">Abonados Activos</h3>
-        <span id="abonadosCount" class="text-sm text-gray-500">0 abonados</span>
+        <div class="flex items-center gap-2">
+          <button 
+            id="refreshBtn"
+            class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            🔄 Actualizar
+          </button>
+          <span id="abonadosCount" class="text-sm text-gray-500">0 abonados</span>
+        </div>
       </div>
       <div id="abonadosList" class="space-y-2 max-h-60 overflow-y-auto">
         <!-- Lista se llena dinámicamente -->
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Configuración de la API
+    const API_BASE_URL = 'https://xpz21v8w-8000.use2.devtunnels.ms/api/vehicule/menbership/';
+    
+    // Elementos del DOM
+    const abonadoNombre = document.getElementById('abonadoNombre');
     const abonadoPlaca = document.getElementById('abonadoPlaca');
     const abonadoTipo = document.getElementById('abonadoTipo');
-    const abonadoNombre = document.getElementById('abonadoNombre');
+    const abonadoMonto = document.getElementById('abonadoMonto');
     const addAbonadoBtn = document.getElementById('addAbonadoBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const messageContainer = document.getElementById('messageContainer');
     const abonadosList = document.getElementById('abonadosList');
     const abonadosCount = document.getElementById('abonadosCount');
     const abonadosCarros = document.getElementById('abonadosCarros');
     const abonadosMotos = document.getElementById('abonadosMotos');
     const ingresosMensuales = document.getElementById('ingresosMensuales');
 
-    // Obtener abonados del localStorage
-    function getAbonados() {
-      return JSON.parse(localStorage.getItem('parkingAbonados') || '[]');
-    }
+    let abonados = [];
 
-    // Guardar abonados en localStorage
-    function saveAbonados(abonados) {
-      localStorage.setItem('parkingAbonados', JSON.stringify(abonados));
-    }
-
-    // Obtener tarifas mensuales
-    function getTarifasMensuales() {
-      const tarifas = JSON.parse(localStorage.getItem('parkingTarifas') || '{}');
-      return {
-        carro: tarifas.carro?.mensual || 80000,
-        moto: tarifas.moto?.mensual || 40000
+    // Mostrar mensajes
+    function showMessage(message, type = 'info') {
+      const colors = {
+        success: 'bg-green-100 border-green-400 text-green-700',
+        error: 'bg-red-100 border-red-400 text-red-700',
+        info: 'bg-blue-100 border-blue-400 text-blue-700'
       };
+
+      messageContainer.innerHTML = `
+        <div class="border-l-4 p-4 ${colors[type]} rounded">
+          <p>${message}</p>
+        </div>
+      `;
+
+      setTimeout(() => {
+        messageContainer.innerHTML = '';
+      }, 5000);
     }
 
     // Formatear moneda
@@ -130,103 +170,129 @@
       }).format(amount);
     }
 
-    // Calcular fecha de vencimiento (30 días desde hoy)
-    function calcularVencimiento() {
-      const fecha = new Date();
-      fecha.setDate(fecha.getDate() + 30);
-      return fecha.toISOString().split('T')[0];
+    // Cargar abonados desde la API
+    async function loadAbonados() {
+      try {
+        showMessage('Cargando abonados...', 'info');
+        const response = await fetch(API_BASE_URL, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('Datos recibidos de la API:', data);
+        
+        // Procesar la respuesta según la estructura mostrada
+        abonados = Array.isArray(data) ? data : (data.data || []);
+        
+        console.log('Abonados procesados:', abonados);
+        
+        renderAbonados();
+        updateStats();
+        showMessage('Abonados cargados exitosamente', 'success');
+      } catch (error) {
+        console.error('Error loading abonados:', error);
+        showMessage('Error al cargar los abonados: ' + error.message, 'error');
+        abonados = [];
+        renderAbonados();
+        updateStats();
+      }
     }
 
-    // Verificar si un abonado está vencido
-    function isVencido(fechaVencimiento) {
-      const hoy = new Date().toISOString().split('T')[0];
-      return fechaVencimiento < hoy;
+    // Agregar nuevo abonado a la API
+    async function addAbonado() {
+      const nombre = abonadoNombre.value.trim();
+      const placa = abonadoPlaca.value.trim().toUpperCase();
+      const tipoVehiculo = abonadoTipo.value;
+      const montoPagado = parseInt(abonadoMonto.value);
+
+      if (!nombre || !placa || !tipoVehiculo || !montoPagado) {
+        showMessage('Por favor complete todos los campos', 'error');
+        return;
+      }
+
+      // Verificar si ya existe
+      const exists = abonados.some(a => a.placa && a.placa.toLowerCase() === placa.toLowerCase());
+      if (exists) {
+        showMessage('Ya existe un abonado con esa placa', 'error');
+        return;
+      }
+
+      // Mostrar loading
+      addAbonadoBtn.disabled = true;
+      btnText.classList.add('hidden');
+      btnSpinner.classList.remove('hidden');
+
+      try {
+        // Estructura del payload basada en tu API
+        const nuevoAbonado = {
+          placa: placa,
+          tipo_vehiculo: tipoVehiculo,
+          nombre_propietario: nombre,
+          nombre: "Membresía Premium", // Puedes ajustar esto según necesites
+          monto_pagado: montoPagado
+        };
+
+        console.log('Enviando abonado:', nuevoAbonado);
+
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(nuevoAbonado)
+        });
+
+        const result = await response.json();
+        console.log('Respuesta del servidor:', result);
+
+        if (!response.ok) {
+          throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        }
+
+        // Limpiar formulario
+        abonadoNombre.value = '';
+        abonadoPlaca.value = '';
+        abonadoTipo.value = '';
+        abonadoMonto.value = '';
+        validateForm();
+
+        // Recargar lista
+        await loadAbonados();
+        
+        showMessage(`Abonado ${nombre} registrado exitosamente`, 'success');
+      } catch (error) {
+        console.error('Error adding abonado:', error);
+        showMessage('Error al registrar el abonado: ' + error.message, 'error');
+      } finally {
+        // Ocultar loading
+        addAbonadoBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnSpinner.classList.add('hidden');
+        validateForm();
+      }
     }
 
     // Validar formulario
     function validateForm() {
+      const nombre = abonadoNombre.value.trim();
       const placa = abonadoPlaca.value.trim();
       const tipo = abonadoTipo.value;
-      const nombre = abonadoNombre.value.trim();
-      addAbonadoBtn.disabled = !placa || !tipo || !nombre;
-    }
-
-    // Agregar nuevo abonado
-    function addAbonado() {
-      const placa = abonadoPlaca.value.trim().toUpperCase();
-      const tipo = abonadoTipo.value;
-      const nombre = abonadoNombre.value.trim();
-
-      if (!placa || !tipo || !nombre) return;
-
-      const abonados = getAbonados();
+      const monto = abonadoMonto.value;
       
-      // Verificar si ya existe
-      const exists = abonados.some(a => a.placa.toLowerCase() === placa.toLowerCase());
-      if (exists) {
-        alert('Ya existe un abonado con esa placa');
-        return;
-      }
-
-      const tarifasMensuales = getTarifasMensuales();
-      const nuevoAbonado = {
-        id: Date.now().toString(),
-        placa: placa,
-        tipo: tipo,
-        nombre: nombre,
-        fechaInicio: new Date().toISOString().split('T')[0],
-        fechaVencimiento: calcularVencimiento(),
-        tarifa: tarifasMensuales[tipo],
-        activo: true
-      };
-
-      abonados.push(nuevoAbonado);
-      saveAbonados(abonados);
-
-      // Limpiar formulario
-      abonadoPlaca.value = '';
-      abonadoTipo.value = '';
-      abonadoNombre.value = '';
-      validateForm();
-
-      renderAbonados();
-      updateStats();
-      
-      alert(`Abonado ${nombre} registrado exitosamente`);
-    }
-
-    // Renovar abonado
-    function renovarAbonado(id) {
-      const abonados = getAbonados();
-      const abonado = abonados.find(a => a.id === id);
-      if (!abonado) return;
-
-      abonado.fechaVencimiento = calcularVencimiento();
-      abonado.activo = true;
-      
-      saveAbonados(abonados);
-      renderAbonados();
-      
-      alert(`Mensualidad de ${abonado.nombre} renovada hasta ${abonado.fechaVencimiento}`);
-    }
-
-    // Eliminar abonado
-    function eliminarAbonado(id) {
-      if (!confirm('¿Estás seguro de eliminar este abonado?')) return;
-      
-      const abonados = getAbonados();
-      const filtered = abonados.filter(a => a.id !== id);
-      
-      saveAbonados(filtered);
-      renderAbonados();
-      updateStats();
+      addAbonadoBtn.disabled = !nombre || !placa || !tipo || !monto || btnSpinner.classList.contains('block');
     }
 
     // Renderizar lista de abonados
     function renderAbonados() {
-      const abonados = getAbonados();
-      
-      if (abonados.length === 0) {
+      if (!abonados || abonados.length === 0) {
         abonadosList.innerHTML = `
           <div class="text-center py-8 text-gray-500">
             <svg class="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,35 +304,41 @@
         return;
       }
 
-      abonadosList.innerHTML = abonados.map(abonado => {
-        const vencido = isVencido(abonado.fechaVencimiento);
-        const statusClass = vencido ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50';
-        const statusText = vencido ? 'Vencido' : 'Activo';
-        const statusColor = vencido ? 'text-red-600' : 'text-green-600';
+      console.log('Renderizando abonados:', abonados);
 
+      abonadosList.innerHTML = abonados.map((abonado, index) => {
+    // Usar los nombres de campos exactos de tu API
+    const nombre = abonado.nombre || 'Sin nombre';
+    const placa = abonado.placa || 'Sin placa';
+    const tipo = abonado.tipo_vehiculo || abonado.tipo || 'sin tipo';
+    const monto = abonado.monto_pagado || 0;
+    const tieneMembresia = abonado.tiene_membresia_activa || false;
+    const fechaEntrada = abonado.fecha_entrada ? new Date(abonado.fecha_entrada).toLocaleDateString() : '';
+    const fechaFin = abonado.fecha_fin ? new Date(abonado.fecha_fin).toLocaleDateString() : '';
+
+    console.log(`Abonado ${index}:`, { nombre, placa, tipo, monto, tieneMembresia });
+
+    const statusColor = tieneMembresia ? 'green' : 'red';
+    const statusText = tieneMembresia ? 'Activo' : 'Inactivo';
         return `
-          <div class="flex items-center justify-between p-3 border rounded-lg ${statusClass}">
+          <div class="flex items-center justify-between p-3 border rounded-lg ${statusColor === 'green' ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
             <div class="flex items-center gap-3">
-              ${abonado.tipo === 'carro' ? 
+              ${tipo === 'carro' ? 
                 '<svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v8a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" clip-rule="evenodd"></path></svg>' :
                 '<svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z"></path></svg>'
               }
               <div>
-                <p class="font-medium">${abonado.placa} - ${abonado.nombre}</p>
+                <p class="font-medium">${placa} - ${nombre}</p>
                 <p class="text-sm text-gray-600">
-                  Vence: ${abonado.fechaVencimiento} | ${formatCurrency(abonado.tarifa)}/mes
+                  Tipo: ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} | Pagó: ${formatCurrency(monto)}
                 </p>
+                ${fechaEntrada ? `<p class="text-xs text-gray-500">Entrada: ${fechaEntrada}${fechaFin ? ` | Vence: ${fechaFin}` : ''}</p>` : ''}
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColor} bg-current bg-opacity-10">
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColor === 'green' ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100'}">
                 ${statusText}
               </span>
-              ${vencido ? 
-                `<button onclick="renovarAbonado('${abonado.id}')" class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Renovar</button>` :
-                ''
-              }
-              <button onclick="eliminarAbonado('${abonado.id}')" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
             </div>
           </div>
         `;
@@ -275,12 +347,30 @@
 
     // Actualizar estadísticas
     function updateStats() {
-      const abonados = getAbonados();
-      const carros = abonados.filter(a => a.tipo === 'carro').length;
-      const motos = abonados.filter(a => a.tipo === 'moto').length;
+      if (!abonados || abonados.length === 0) {
+        abonadosCount.textContent = '0 abonados';
+        abonadosCarros.textContent = '0';
+        abonadosMotos.textContent = '0';
+        ingresosMensuales.textContent = formatCurrency(0);
+        return;
+      }
+
+      const carros = abonados.filter(a => {
+        const tipo = (a.tipo_vehiculo || a.tipo || '').toLowerCase();
+        return tipo === 'carro';
+      }).length;
       
-      const tarifasMensuales = getTarifasMensuales();
-      const ingresos = (carros * tarifasMensuales.carro) + (motos * tarifasMensuales.moto);
+      const motos = abonados.filter(a => {
+        const tipo = (a.tipo_vehiculo || a.tipo || '').toLowerCase();
+        return tipo === 'moto';
+      }).length;
+      
+      const ingresos = abonados.reduce((total, abonado) => {
+        const monto = abonado.monto_pagado || 0;
+        return total + Number(monto);
+      }, 0);
+
+      console.log('Estadísticas calculadas:', { carros, motos, ingresos, totalAbonados: abonados.length });
 
       abonadosCount.textContent = `${abonados.length} abonado${abonados.length !== 1 ? 's' : ''}`;
       abonadosCarros.textContent = carros;
@@ -289,7 +379,7 @@
     }
 
     // Event listeners
-    [abonadoPlaca, abonadoTipo, abonadoNombre].forEach(input => {
+    [abonadoNombre, abonadoPlaca, abonadoTipo, abonadoMonto].forEach(input => {
       input.addEventListener('input', validateForm);
       input.addEventListener('change', validateForm);
     });
@@ -299,24 +389,22 @@
     });
 
     addAbonadoBtn.addEventListener('click', addAbonado);
-
-    // Funciones globales
-    window.renovarAbonado = renovarAbonado;
-    window.eliminarAbonado = eliminarAbonado;
+    refreshBtn.addEventListener('click', loadAbonados);
 
     // Función global para verificar si es abonado
     window.isAbonado = function(placa) {
-      const abonados = getAbonados();
+      if (!abonados || abonados.length === 0) return null;
+      
       const abonado = abonados.find(a => 
-        a.placa.toLowerCase() === placa.toLowerCase() && 
-        !isVencido(a.fechaVencimiento)
+        a.placa && a.placa.toLowerCase() === placa.toLowerCase()
       );
       return abonado || null;
     };
 
     // Inicializar
     validateForm();
-    renderAbonados();
-    updateStats();
+    loadAbonados();
   });
 </script>
+</body>
+</html>

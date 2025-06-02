@@ -5,9 +5,10 @@ export interface Props {
   icon: string;
   iconColor: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
   subtitle?: string;
+  id?: string; // Agregamos el ID como prop opcional
 }
 
-const { title, value, icon, iconColor, subtitle } = Astro.props;
+const { title, value, icon, iconColor, subtitle, id } = Astro.props;
 
 const iconColorClasses = {
   blue: 'text-blue-600',
@@ -18,7 +19,7 @@ const iconColorClasses = {
 };
 ---
 
-<div class="bg-white rounded-lg shadow p-6">
+<div class="bg-white rounded-lg shadow p-6" id={id}>
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-sm font-medium text-gray-600">{title}</h3>
     <svg class={`h-4 w-4 ${iconColorClasses[iconColor]}`} fill="currentColor" viewBox="0 0 20 20">

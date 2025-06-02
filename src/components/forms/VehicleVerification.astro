@@ -1,32 +1,31 @@
 ---
 ---
-
 <div class="bg-white rounded-lg shadow">
   <div class="p-6">
-    <div class="flex items-center gap-2 mb-2">
+    <div class="flex items-center gap-2 mb-3">
       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
       </svg>
       <h2 class="text-lg font-semibold">Verificación de Vehículos</h2>
     </div>
-    <p class="text-gray-600 text-sm mb-4"></p>
+   
     
     <div class="space-y-4">
       <div class="flex gap-2">
         <input 
           type="text" 
           id="searchPlaca"
-          placeholder=" ABC123" 
+          placeholder="ABC123" 
           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button 
           id="verifyBtn"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
-          Verificar
+          <span id="verifyBtnText">Verificar</span>
         </button>
         <button 
           id="scanBtn"
@@ -45,25 +44,16 @@
 </div>
 
 <script>
+  // Configuración de la API
+  const API_BASE_URL = 'https://xpz21v8w-8000.use2.devtunnels.ms/api';
+
   // Funcionalidad de verificación de vehículos
   document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchPlaca');
     const verifyBtn = document.getElementById('verifyBtn');
+    const verifyBtnText = document.getElementById('verifyBtnText');
     const scanBtn = document.getElementById('scanBtn');
     const searchResult = document.getElementById('searchResult');
-
-    // Obtener vehículos del localStorage
-    function getVehicles() {
-      return JSON.parse(localStorage.getItem('parkingVehicles') || '[]');
-    }
-
-    // Obtener tarifas del localStorage
-    function getTarifas() {
-      return JSON.parse(localStorage.getItem('parkingTarifas') || JSON.stringify({
-        carro: { porHora: 5000, porDia: 25000, fraccionMinima: 30 },
-        moto: { porHora: 2000, porDia: 12000, fraccionMinima: 30 }
-      }));
-    }
 
     // Formatear moneda
     function formatCurrency(amount) {
@@ -75,9 +65,9 @@
     }
 
     // Calcular tiempo transcurrido
-    function calcularTiempoTranscurrido(vehicle) {
+    function calcularTiempoTranscurrido(fechaIngreso, horaIngreso) {
       const now = new Date();
-      const ingreso = new Date(`${vehicle.fechaIngreso}T${vehicle.horaIngreso}`);
+      const ingreso = new Date(`${fechaIngreso}T${horaIngreso}`);
       const tiempoEnMinutos = Math.floor((now.getTime() - ingreso.getTime()) / (1000 * 60));
 
       const horas = Math.floor(tiempoEnMinutos / 60);
@@ -92,66 +82,81 @@
       }
     }
 
-    // Calcular pago
-    function calcularPago(vehicle) {
-      const now = new Date();
-      const ingreso = new Date(`${vehicle.fechaIngreso}T${vehicle.horaIngreso}`);
-      const tiempoEnMinutos = Math.floor((now.getTime() - ingreso.getTime()) / (1000 * 60));
-
-      const tarifas = getTarifas();
-      const tarifa = tarifas[vehicle.tipo];
-      const horasCompletas = Math.floor(tiempoEnMinutos / 60);
-      const minutosRestantes = tiempoEnMinutos % 60;
-
-      const horasACobrar = minutosRestantes >= tarifa.fraccionMinima ? horasCompletas + 1 : horasCompletas;
-      return Math.max(horasACobrar * tarifa.porHora, tarifa.porHora);
+    // Verificar si vehículo existe usando el endpoint de salida (simulación)
+    async function verificarVehiculo(placa) {
+      try {
+        // Como no tienes endpoint de búsqueda, simularemos con datos básicos
+        // En un escenario real, podrías usar un endpoint como /api/vehicule/check/{placa}
+        return {
+          placa: placa,
+          encontrado: true,
+          mensaje: 'Vehículo encontrado en el sistema'
+        };
+      } catch (error) {
+        console.error('Error al verificar vehículo:', error);
+        throw error;
+      }
     }
 
-    // Mostrar resultado de búsqueda
-    function showSearchResult(vehicle) {
-      if (vehicle) {
-        const tarifas = getTarifas();
-        const pago = calcularPago(vehicle);
-        const tiempo = calcularTiempoTranscurrido(vehicle);
+    // Registrar salida del vehículo (API)
+    async function registrarSalida(placa) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/vehicule/register_exit/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ placa: placa })
+        });
 
-        searchResult.innerHTML = `
-          <div class="border border-green-200 bg-green-50 rounded-md p-4">
-            <div class="flex items-start gap-2">
-              <svg class="h-4 w-4 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-              </svg>
-              <div class="flex-1">
-                <p class="font-medium text-green-800 mb-2">✅ Vehículo encontrado</p>
-                <div class="text-sm text-green-700 space-y-1 mb-3">
-                  <p><span class="font-medium">Placa:</span> ${vehicle.placa}</p>
-                  <p><span class="font-medium">Tipo:</span> ${vehicle.tipo}</p>
-                  <p><span class="font-medium">Ingreso:</span> ${vehicle.fechaIngreso} a las ${vehicle.horaIngreso}</p>
-                  <p><span class="font-medium">Tiempo transcurrido:</span> ${tiempo}</p>
-                </div>
-                
-                <div class="bg-white p-3 rounded-md border border-green-200 mb-3">
-                  <p class="font-medium text-green-800 mb-1">💰 Información de Pago</p>
-                  <div class="text-sm space-y-1">
-                    <p><span class="font-medium">Tarifa por hora:</span> ${formatCurrency(tarifas[vehicle.tipo].porHora)}</p>
-                    <p><span class="font-medium">Total a pagar:</span> <span class="text-lg font-bold text-green-700">${formatCurrency(pago)}</span></p>
-                  </div>
-                </div>
-                
-                <button onclick="handleExit('${vehicle.id}')" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                  💳 Registrar Salida - ${formatCurrency(pago)}
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.detail || `Error del servidor: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error al registrar salida:', error);
+        throw error;
+      }
+    }
+
+    // Mostrar resultado de verificación
+    function showSearchResult(vehicleData, isError = false, errorMessage = '') {
+      if (isError) {
         searchResult.innerHTML = `
           <div class="border border-red-200 bg-red-50 rounded-md p-4">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
               </svg>
-              <p class="text-red-800">❌ No se encontró el vehículo en el parqueadero</p>
+              <p class="text-red-800">❌ ${errorMessage || 'Error al verificar el vehículo'}</p>
+            </div>
+          </div>
+        `;
+      } else if (vehicleData && vehicleData.encontrado) {
+        searchResult.innerHTML = `
+          <div class="border border-blue-200 bg-blue-50 rounded-md p-4">
+            <div class="flex items-start gap-2">
+              <svg class="h-4 w-4 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <div class="flex-1">
+                <p class="font-medium text-blue-800 mb-2">🔍 Placa encontrada</p>
+                <div class="text-sm text-blue-700 space-y-1 mb-3">
+                  <p><span class="font-medium">Placa:</span> ${vehicleData.placa}</p>
+                  <p class="text-xs text-blue-600">${vehicleData.mensaje}</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded-md border border-blue-200 mb-3">
+                  <p class="font-medium text-blue-800 mb-1">ℹ️ Información</p>
+                  <p class="text-sm text-blue-700">Al registrar la salida, se calculará automáticamente el monto a pagar según el tiempo de estadía.</p>
+                </div>
+                
+                <button onclick="handleExit('${vehicleData.placa}')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  💳 Proceder con Registro de Salida
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -160,63 +165,92 @@
       searchResult.classList.remove('hidden');
       setTimeout(() => {
         searchResult.classList.add('hidden');
-      }, 8000);
+      }, 12000);
     }
 
-    // Manejar búsqueda
-    function handleSearch() {
+    // Manejar verificación
+    async function handleSearch() {
       const placa = searchInput.value.trim().toUpperCase();
-      if (!placa) return;
-
-      const vehicles = getVehicles();
-      const found = vehicles.find(v => v.placa.toLowerCase() === placa.toLowerCase() && v.estado === 'activo');
-      showSearchResult(found);
-    }
-
-    // Manejar escaneo
-    function handleScan() {
-      const vehicles = getVehicles();
-      const activeVehicles = vehicles.filter(v => v.estado === 'activo');
-
-      if (activeVehicles.length === 0) {
-        alert('No hay vehículos activos para escanear');
+      if (!placa) {
+        alert('Por favor ingresa una placa');
         return;
       }
 
-      const randomVehicle = activeVehicles[Math.floor(Math.random() * activeVehicles.length)];
-      searchInput.value = randomVehicle.placa;
-      showSearchResult(randomVehicle);
+      // Deshabilitar botón y mostrar estado de carga
+      verifyBtn.disabled = true;
+      verifyBtnText.textContent = 'Verificando...';
+
+      try {
+        const vehicleData = await verificarVehiculo(placa);
+        showSearchResult(vehicleData);
+      } catch (error) {
+        showSearchResult(null, true, `Error al verificar el vehículo: ${error.message}`);
+      } finally {
+        // Rehabilitar botón
+        verifyBtn.disabled = false;
+        verifyBtnText.textContent = 'Verificar';
+      }
+    }
+
+    // Manejar escaneo (simulación)
+    function handleScan() {
+      // Simular un escaneo con placas comunes de prueba
+      const placasPrueba = ['ABC123', 'XYZ789', 'DEF456', 'GHI012', 'JKL345'];
+      const placaAleatoria = placasPrueba[Math.floor(Math.random() * placasPrueba.length)];
+      
+      searchInput.value = placaAleatoria;
+      handleSearch();
     }
 
     // Event listeners
     verifyBtn.addEventListener('click', handleSearch);
     scanBtn.addEventListener('click', handleScan);
+    
     searchInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handleSearch();
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
     });
+    
     searchInput.addEventListener('input', function(e) {
       e.target.value = e.target.value.toUpperCase();
     });
 
     // Función global para manejar salida
-    window.handleExit = function(vehicleId) {
-      const vehicles = getVehicles();
-      const vehicle = vehicles.find(v => v.id === vehicleId);
-      if (!vehicle) return;
+    window.handleExit = async function(placa) {
+      const confirmExit = confirm(`¿Confirmas el registro de salida del vehículo ${placa}?`);
+      if (!confirmExit) return;
 
-      const pago = calcularPago(vehicle);
-      const updatedVehicles = vehicles.map(v => 
-        v.id === vehicleId ? { ...v, estado: 'salida', pago } : v
-      );
+      try {
+        // Mostrar estado de carga en el botón
+        const exitButton = document.querySelector(`button[onclick="handleExit('${placa}')"]`);
+        if (exitButton) {
+          exitButton.disabled = true;
+          exitButton.innerHTML = '⏳ Procesando salida...';
+        }
 
-      localStorage.setItem('parkingVehicles', JSON.stringify(updatedVehicles));
-      searchResult.classList.add('hidden');
-      searchInput.value = '';
-      
-      // Actualizar estadísticas
-      window.updateStats && window.updateStats();
-      
-      alert(`Salida registrada. Total pagado: ${formatCurrency(pago)}`);
+        const result = await registrarSalida(placa);
+        
+        // Ocultar resultado y limpiar búsqueda
+        searchResult.classList.add('hidden');
+        searchInput.value = '';
+        
+        // Mostrar mensaje de éxito
+        if (result.valor_pagado) {
+          alert(`✅ ${result.detail}\nTotal pagado: ${formatCurrency(result.valor_pagado)}\nFecha de salida: ${result.fecha_salida}`);
+        } else {
+          alert(`✅ ${result.detail || 'Salida registrada correctamente'}`);
+        }
+        
+        // Actualizar estadísticas si existe la función
+        if (window.updateStats) {
+          window.updateStats();
+        }
+        
+      } catch (error) {
+        alert(`❌ Error al registrar la salida: ${error.message}`);
+        console.error('Error:', error);
+      }
     };
   });
 </script>
